@@ -61,20 +61,21 @@ class RegisterUserAPIView(generics.GenericAPIView):
     def post(self, request):
         serializer = self.serializer_class(data = request.data)
         serializer.is_valid(raise_exception=True)
-        email = request.POST['email']
-        password = request.POST['password']
+        email = serializer.data['email']
+        password = serializer.data['password']
         otp = str(int(uuid.uuid1()))[:6]
         token = otp_token_for_registeration(email, password, otp)
-        try:
-            send_mail(
-                'Register Account',
-                'Otp for your registeration is ' + otp,
-                'ankit971869@gmail.com',
-                [email],
-                fail_silently=False,
-                )
-        except exceptions as e:
-            return Response({"errors":"e"})
+        print(otp)
+        # try:
+        #     send_mail(
+        #         'Register Account',
+        #         'Otp for your registeration is ' + otp,
+        #         'ankit971869@gmail.com',
+        #         [email],
+        #         fail_silently=False,
+        #         )
+        # except exceptions as e:
+        #     return Response({"errors":"e"})
         try:
             return Response({
                 "token" : token
@@ -92,8 +93,10 @@ class ValidateOtpForRegisterationAPIView(generics.GenericAPIView):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         otp = serializer.data['otp']
+
         user = self.authentication_class.authenticate(self, request, otp)
-        token = get_tokens_for_user(user)
+
+        token = get_tokens_for_user(user[0])
         try:
             return Response({"msg":"registeration successful",
             "user" : user[0].email, 

@@ -181,5 +181,5 @@ SIMPLE_JWT = {
 
 CORS_ORIGIN_ALLOW_ALL = False
 CORS_ORIGIN_WHITELIST = (
-  'https://github.com/aman5873/bhaktiSadhna',
+  'https://github.com.aman5873.bhaktiSadhna',
 )
