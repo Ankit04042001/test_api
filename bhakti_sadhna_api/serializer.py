@@ -74,11 +74,11 @@ class ForgetPasswordSerializer(serializers.ModelSerializer):
 
 class ValidateOtpForForgetPasswordSerializer(serializers.ModelSerializer):
     otp = serializers.CharField(max_length = 6)
-    password2 = serializers.CharField(style={'input_type':'password'}, write_only=True)
+    password2 = serializers.CharField(style={'input_type':'password'})
     class Meta:
         model = User
         fields = ('otp','password', 'password2')
-        extra_kwargs = {'password': {'write_only': True},'password2': {'write_only': True} }
+        # extra_kwargs = {'password': {'write_only': True},'password2': {'write_only': True} }
 
     def validate(self, attrs):
         password = attrs.get('password')

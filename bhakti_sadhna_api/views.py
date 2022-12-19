@@ -13,7 +13,7 @@ from .authentications import RegisterationOtpAuthentication, ForgetPasswordOtpAu
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from .renderer import UserRenderer
-
+from django.core.mail import send_mail
 
 #******************** Generate Tokens Manually For Authentication *********************/
 
@@ -66,16 +66,17 @@ class RegisterUserAPIView(generics.GenericAPIView):
         otp = str(int(uuid.uuid1()))[:6]
         token = otp_token_for_registeration(email, password, otp)
         print(otp)
-        # try:
-        #     send_mail(
-        #         'Register Account',
-        #         'Otp for your registeration is ' + otp,
-        #         'ankit971869@gmail.com',
-        #         [email],
-        #         fail_silently=False,
-        #         )
-        # except exceptions as e:
-        #     return Response({"errors":"e"})
+        try:
+            send_mail(
+                'Register Account',
+                'Otp for your registeration is ' + otp,
+                'ankit971869@gmail.com',
+                [email],
+                fail_silently=False,
+                )
+        except Exception as e:
+            print(e)
+            return Response({"errors"})
         try:
             return Response({
                 "token" : token
@@ -194,7 +195,7 @@ class ValidateOtpForForgetPasswordAPIView(generics.GenericAPIView):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         otp = serializer.data['otp']
-        password = request.POST['password']
+        password = serializer.data['password']
         user = self.authentication_class.authenticate(self, request, otp)
         user[0].set_password(password)
         user[0].save()
