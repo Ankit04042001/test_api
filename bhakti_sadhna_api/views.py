@@ -15,6 +15,19 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from .renderer import UserRenderer
 from django.core.mail import send_mail
 
+
+
+#******************** Test View for testing purpose *********************/
+
+class Test(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+    renderer_classes = [UserRenderer]
+    def get(self, request):
+        return HttpResponse(request.user.is_authenticated)
+
+#******************** End of Test View *********************/
+
+
 #******************** Generate Tokens Manually For Authentication *********************/
 
 def get_tokens_for_user(user):
@@ -28,29 +41,7 @@ def get_tokens_for_user(user):
 #******************** End of Generate Tokens Manually For Authentication *********************/
 
 
-class AttendenceListView(generics.GenericAPIView):
-    serializer_class = AttendenceSerializer
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
-    renderer_classes = [UserRenderer]
-
-    def get(self, request):
-        attendence = Attendence.objects.all().filter(user=request.user.id, date=datetime.date.today())
-        serializer = self.serializer_class(attendence, many=True)
-        serializer.data.append(f'email:{request.user.email}') 
-        return Response(**serializer.data)
-    
-
-class TaskListView(generics.ListCreateAPIView):
-    queryset = Task.objects.all()
-    serializer_class = TaskSerializer
-    # authentication_classes = [BasicAuthentication]
-    # permission_classes = [IsAdminOrReadOnly]
-
-class Test(View):
-    def get(self, request):
-        return HttpResponse(request.user.is_authenticated)
-
+#******************** User Registeration View *********************/
 
 class RegisterUserAPIView(generics.GenericAPIView):
     serializer_class = RegisterUserSerializer
@@ -65,7 +56,6 @@ class RegisterUserAPIView(generics.GenericAPIView):
         password = serializer.data['password']
         otp = str(int(uuid.uuid1()))[:6]
         token = otp_token_for_registeration(email, password, otp)
-        print(otp)
         try:
             send_mail(
                 'Register Account',
@@ -75,14 +65,22 @@ class RegisterUserAPIView(generics.GenericAPIView):
                 fail_silently=False,
                 )
         except Exception as e:
-            print(e)
-            return Response({"errors"})
+            return Response({"status" : False, "msg" : e})
         try:
             return Response({
-                "token" : token
+                "status" : True,
+                "msg" : "Otp sent successfully.",
+                "data" : {
+                    "token" : token
+                }
             })
         except:
             return Response(serializer.errors)
+
+
+#******************** End of Registeration View *********************/
+
+#******************** Otp Validation View for User Registeration *********************/
 
 class ValidateOtpForRegisterationAPIView(generics.GenericAPIView):
     serializer_class = ValidateOtpForRegisterationSerializer
@@ -99,14 +97,21 @@ class ValidateOtpForRegisterationAPIView(generics.GenericAPIView):
 
         token = get_tokens_for_user(user[0])
         try:
-            return Response({"msg":"registeration successful",
-            "user" : user[0].email, 
-            "refresh_token" : token['refresh'],
-            "access_token" : token['access']
+            return Response({
+                "status" : True,
+                "msg":"registeration successful",
+                "data" : {
+                    "user" : user[0].email, 
+                    "refresh_token" : token['refresh'],
+                    "access_token" : token['access']
+                }
             })  
         except:
             return Response(serializer.errors)  
 
+#******************** End of Otp Validation View *********************/
+
+#******************** Login View *********************/
 
 class LoginAPIView(generics.GenericAPIView):
     permission_classes = [AllowAny]
@@ -116,24 +121,33 @@ class LoginAPIView(generics.GenericAPIView):
     def post(self, request):
 
         serializer = self.serializer_class(data=request.data)
-        print(serializer)
         serializer.is_valid(raise_exception = True)
         username = serializer.data['email']
         password = serializer.data['password']
         user = authenticate(username=username, password=password)
         if user is None:
             return Response({
-                "errors":"Invalid username or password"
+                "status" : "False",
+                "msg" : "Invalid username or password"
             })
         token = get_tokens_for_user(user)
         try:
             return Response({
-            "msg" : "login successful", 
-            "refresh_token" : token['refresh'],
-            "access_token" : token['access']
+                "status" : True,
+                "msg" : "login successful", 
+                "data" : {
+                    "user" : user.id,
+                    "refresh_token" : token['refresh'],
+                    "access_token" : token['access']
+                }
             })
         except:
             return Response(serializer.errors)    
+
+#******************** End of Login View *********************/
+
+
+#******************** Password change view while logged in  *********************/
 
 class ChangePasswordAPIView(generics.GenericAPIView):
     serializer_class = ChangePasswordSerializer
@@ -145,10 +159,40 @@ class ChangePasswordAPIView(generics.GenericAPIView):
         serializer = self.serializer_class(data=request.data, context = {'user':request.user})
         serializer.is_valid(raise_exception=True)
         try:
-            return Response({"msg":"Password Changed Successfully."})
+            return Response({
+                "status" : True,
+                "msg" : "Password Changed Successfully."
+                })
         except:
             return Response(serializer.errors)
 
+
+
+#******************** End of password change View *********************/
+
+
+#******************** End of password change View *********************/
+
+class LogoutAPIView(generics.GenericAPIView):
+    serializer_class = LogoutSerializer
+    permission_classes = [IsAuthenticated]
+    renderer_classes = [UserRenderer]
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            RefreshToken(serializer.data['refresh']).blacklist()
+        except TokenError as e: 
+            return Response({
+                "status" : False,
+                "msg" : str(e)
+            })
+        return Response("Logout Successfully")
+
+#******************** End of Logout View *********************/
+
+#******************** Forget Password View *********************/
 
 class ForgetPasswordAPIView(generics.GenericAPIView):
     serializer_class = ForgetPasswordSerializer
@@ -163,7 +207,8 @@ class ForgetPasswordAPIView(generics.GenericAPIView):
             user = User.objects.get(email=email)
         except:
             return Response({
-                "errors":"User with this email id doesn't exist."
+                "status" : False,
+                "msg" : "User with this email id doesn't exist."
             })
         otp = str(int(uuid.uuid1()))[:6]
         token = otp_token_for_reset_password(email, otp)
@@ -176,14 +221,26 @@ class ForgetPasswordAPIView(generics.GenericAPIView):
                 fail_silently=False,
                 )
         except exceptions as e:
-            return Response({"error": e})
+            return Response({
+                "status" : False,
+                "msg" : e
+                })
         try:
             return Response({
-                "token" : token
+                "status" : True,
+                "msg" : "Otp Sent Successfully",
+                "data" : {
+                    "token" : token
+                }
             })
         except:
             return Response(serializer.errors)
 
+
+#******************** End of Forget Password View *********************/
+
+
+#******************** Otp Validation View for forget Password *********************/
 
 class ValidateOtpForForgetPasswordAPIView(generics.GenericAPIView):
     serializer_class = ValidateOtpForForgetPasswordSerializer
@@ -201,10 +258,72 @@ class ValidateOtpForForgetPasswordAPIView(generics.GenericAPIView):
         user[0].save()
         token = get_tokens_for_user(user[0])
         try:
-            return Response({"msg":"registeration successful",
-            "user" : user[0].email, 
-            "refresh_token" : token['refresh'],
-            "access_token" : token['access']
+            return Response({
+                "status" : True,
+                "msg":"registeration successful",
+                "data" : {
+                    "user" : user[0].email, 
+                    "refresh_token" : token['refresh'],
+                    "access_token" : token['access']
+                }
             })    
         except:
             return Response(serializer.errors)
+
+#******************** End of Forget Password View *********************/
+
+#******************** Handling Attendence, punch in, punch out *********************/
+
+class AttendenceListView(generics.GenericAPIView):
+    serializer_class = AttendenceSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    renderer_classes = [UserRenderer]
+
+    def get(self, request):
+        attendence = Attendence.objects.all().filter(user=request.user.id, date=datetime.date.today())
+        serializer = self.serializer_class(attendence, many=True)
+        return Response({
+            "status" : True, 
+            "data" : {
+                "date" : str(attendence[0].date),
+                "punch in" : attendence[0].punch_in,
+                "punch out" : attendence[0].punch_out,
+                "user" : attendence[0].user.email,
+                "attendence status" : attendence[0].attendence_status
+            }
+            })
+
+    def post(self, request):
+        attendence = Attendence.objects.all().filter(user=request.user.id, date=datetime.date.today())
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        if serializer.data['date'] == str(datetime.date.today()):
+            return Response("ok")
+        else:
+            return Response({
+                "status" : False,
+                "msg" : "Punching before today or after today is not allowed"
+            })
+    
+#******************** End of Atttendenc View *********************/
+
+
+
+#******************** Task View *********************/
+
+class TaskListView(generics.ListCreateAPIView):
+    queryset = Task.objects.all()
+    serializer_class = TaskSerializer
+    # authentication_classes = [BasicAuthentication]
+    # permission_classes = [IsAdminOrReadOnly]
+
+    def get(self, request):
+        data = Task.objects.all()
+        return Response({
+            "status" : True,
+            "data" : list(self.queryset.values())
+        })
+
+#******************** End of Task View *********************/
