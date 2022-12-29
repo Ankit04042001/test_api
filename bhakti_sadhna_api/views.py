@@ -288,24 +288,91 @@ class AttendenceListView(generics.GenericAPIView):
             "data" : {
                 "date" : str(attendence[0].date),
                 "punch in" : attendence[0].punch_in,
-                "punch out" : attendence[0].punch_out,
                 "user" : attendence[0].user.email,
+                "first_name" : attendence[0].user.first_name,
+                "last_name" : attendence[0].user.last_name,
                 "attendence status" : attendence[0].attendence_status
             }
             })
 
     def post(self, request):
-        attendence = Attendence.objects.all().filter(user=request.user.id, date=datetime.date.today())
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
-        
-        if serializer.data['date'] == str(datetime.date.today()):
-            return Response("ok")
-        else:
+        try:
+            attendence = Attendence.objects.get(user=request.user.id, date=serializer.data['date'])
+        except:
             return Response({
                 "status" : False,
-                "msg" : "Punching before today or after today is not allowed"
+                "msg" : "No Detail Found"
             })
+
+        if serializer.data['date'] == str(datetime.date.today()) and attendence.attendence_status == 'A' and serializer.data['punch_status'] == True:
+            attendence.attendence_status = 'P'
+            print(attendence.attendence_status)
+            attendence.punch_in = datetime.datetime.now().strftime("%H:%M:%S")
+            attendence.save()
+            return Response({
+                "status" : True, 
+                "data" : {
+                    "date" : str(attendence.date),
+                    "punch in" : attendence.punch_in,
+                    "user" : attendence.user.email,
+                    "first_name" : attendence.user.first_name,
+                    "last_name" : attendence.user.last_name,
+                    "attendence status" : attendence.attendence_status
+                }
+            })
+        
+
+        if serializer.data['date'] == str(datetime.date.today()) and attendence.attendence_status == 'P' and serializer.data['punch_status'] == True:
+            return Response({
+                "status" : False, 
+                "msg" : "Attendence Already Marked"
+            })
+        
+        # if serializer.data['date'] == str(datetime.date.today()) and attendence.status == 'A' and serializer.data['punch_status'] == 'punch_in':
+        #     attendence.status = 'N'
+        #     attendence.punch_in = datetime.datetime.now().strftime("%H:%M:%S")
+        #     attendence.save()
+        #     return Response({
+        #         "status" : True, 
+        #         "data" : {
+        #             "date" : str(attendence.date),
+        #             "punch in" : attendence.punch_in,
+        #             "punch out" : attendence.punch_out,
+        #             "user" : attendence.user.email,
+        #             "attendence status" : attendence.attendence_status
+        #         }
+        #     })
+
+        # elif serializer.data['date'] == str(datetime.date.today()) and attendence.status == 'N' and serializer.data['punch_status'] == 'punch_out':
+        #     attendence.status = "P"
+        #     attendence.punch_out = datetime.datetime.now().strftime("%H:%M:%S")
+        #     attendence.save()
+        #     return Response({
+        #         "status" : True, 
+        #         "data" : {
+        #             "date" : str(attendence.date),
+        #             "punch in" : attendence.punch_in,
+        #             "punch out" : attendence.punch_out,
+        #             "user" : attendence.user.email,
+        #             "attendence status" : attendence.attendence_status
+        #         }
+        #     })
+
+        else :
+            return Response({
+                "status" : True, 
+                "data" : {
+                    "date" : str(attendence.date),
+                    "punch in" : attendence.punch_in,
+                    "user" : attendence.user.email,
+                    "first_name" : attendence.user.first_name,
+                    "last_name" : attendence.user.last_name,
+                    "attendence status" : attendence.attendence_status
+                }   
+            })
+
     
 #******************** End of Atttendenc View *********************/
 

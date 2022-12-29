@@ -6,12 +6,14 @@ from django.utils.translation import gettext_lazy as _
 from datetime import timedelta
 
 class User(AbstractUser):
+    first_name = models.CharField(max_length = 25)
+    last_name = models.CharField(max_length = 25)
     email = models.EmailField(blank=False, null=False, unique=True)
     mobile_no = models.CharField(max_length=10, blank=True, null=True, default='')
     USERNAME_FIELD = 'email'
     objects = CustomUserManager()
     
-    REQUIRED_FIELDS = []
+    REQUIRED_FIELDS = [first_name, last_name]
 
     def __str__(self):
         return self.email
@@ -23,11 +25,11 @@ class Attendence(models.Model):
     attendence_status_choices = [
         ('P', 'Present'), 
         ('A', 'Absent'),
-        ('N', 'Pending'),
+        # ('N', 'Pending'),
     ]
     date = models.DateField(auto_now=False, auto_now_add=False, blank=False, null=False, default=timezone.now)
     punch_in = models.TimeField(auto_now=False, auto_now_add=False, blank=True, null=True)
-    punch_out = models.TimeField(auto_now=False, auto_now_add=False, blank=True, null=True)
+    # punch_out = models.TimeField(auto_now=False, auto_now_add=False, blank=True, null=True)
     user = models.ForeignKey(User, on_delete = models.CASCADE, unique_for_date="date", default='')
     attendence_status = models.CharField(max_length=1, choices = attendence_status_choices, default = 'A')
 

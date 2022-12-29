@@ -72,7 +72,6 @@ class LogoutSerializer(serializers.Serializer):
     refresh = serializers.CharField()
 
   
-    
     default_error_messages = {
         'bad_token' : "{'hi':'Token Invalid or expired'}"
     }
@@ -112,9 +111,10 @@ class ValidateOtpForForgetPasswordSerializer(serializers.ModelSerializer):
 
 
 class AttendenceSerializer(serializers.ModelSerializer):
+    punch_status = serializers.BooleanField(allow_null=True)
     class Meta:
         model = Attendence
-        fields = '__all__'
+        fields = '__all__'        
 
 class TaskSerializer(serializers.ModelSerializer):
     class Meta:
