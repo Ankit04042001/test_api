@@ -14,7 +14,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from .renderer import UserRenderer
 from django.core.mail import send_mail
-
+import os
 
 
 #******************** Test View for testing purpose *********************/
@@ -58,17 +58,16 @@ class RegisterUserAPIView(generics.GenericAPIView):
         last_name = serializer.data['last_name']
         otp = str(int(uuid.uuid1()))[:6]
         token = otp_token_for_registeration(email, password, first_name, last_name, otp)
-        print(otp)
-        # try:
-        #     send_mail(
-        #         'Register Account',
-        #         'Otp for your registeration is ' + otp,
-        #         'ankit971869@gmail.com',
-        #         [email],
-        #         fail_silently=False,
-        #         )
-        # except Exception as e:
-        #     return Response({"status" : False, "msg" : e})
+        try:
+            send_mail(
+                'Register Account',
+                'Otp for your registeration is ' + otp,
+                os.environ.get('EMAIL_HOST_USER',''),
+                [email],
+                fail_silently=False,
+                )
+        except Exception as e:
+            return Response({"status" : False, "msg" : str(e)})
         try:
             return Response({
                 "status" : True,
@@ -219,7 +218,7 @@ class ForgetPasswordAPIView(generics.GenericAPIView):
             send_mail(
                 'Register Account',
                 'Otp for your registeration is ' + otp,
-                'ankit971869@gmail.com',
+                os.environ.get('EMAIL_HOST_USER',''),
                 [email],
                 fail_silently=False,
                 )
