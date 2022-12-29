@@ -17,7 +17,7 @@ class RegisterUserSerializer(serializers.ModelSerializer):
     password2 = serializers.CharField(style={'input_type':'password'})
     class Meta:
         model = User
-        fields = ('email', 'password', 'password2')
+        fields = ('first_name', 'last_name', 'email', 'password', 'password2')
         # extra_kwargs = {'password': {'write_only': True},'password2': {'write_only': True} }
 
     def validate(self, attrs):

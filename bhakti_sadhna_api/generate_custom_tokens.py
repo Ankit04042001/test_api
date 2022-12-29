@@ -15,11 +15,13 @@ from django.conf import settings
 #     return access_token
 
 
-def otp_token_for_registeration(email, password, otp):
+def otp_token_for_registeration(email, password, first_name, last_name, otp):
     registeration_token_payload = {
         'otp' : otp,
         'email': email,
         'password' : password,
+        'first_name' : first_name,
+        'last_name' : last_name,
         'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=5),
         'iat': datetime.datetime.utcnow()
     }

@@ -90,6 +90,8 @@ class RegisterationOtpAuthentication(BaseAuthentication):
 
         email = payload['email']
         password = payload['password']
+        first_name = payload['first_name']
+        last_name = payload['last_name']
         token_otp = payload['otp']
 
         print(otp)
@@ -97,7 +99,7 @@ class RegisterationOtpAuthentication(BaseAuthentication):
         if otp != token_otp:
             raise exceptions.AuthenticationFailed('Invailid Otp')
         
-        user = User.objects.create(username=email, email=email)
+        user = User.objects.create(username=email, email=email, first_name=first_name, last_name=last_name)
         user.set_password(password)
         user.save()
         # self.enforce_csrf(request)
