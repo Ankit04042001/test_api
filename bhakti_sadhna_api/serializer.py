@@ -21,6 +21,10 @@ class RegisterUserSerializer(serializers.ModelSerializer):
         # extra_kwargs = {'password': {'write_only': True},'password2': {'write_only': True} }
 
     def validate(self, attrs):
+        if attrs.get('first_name') is None:
+            raise serializers.ValidationError("First Name is required")
+        if attrs.get('last_name') is None:
+            raise serializers.ValidationError("Last Name is required")
         password = attrs.get('password')
         password2 = attrs.get('password2')
         if password != password2:
@@ -40,11 +44,11 @@ class ValidateOtpForRegisterationSerializer(serializers.ModelSerializer):
 
 class LoginSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(max_length=255)
+    
     class Meta:
         model = User
-        fields = ('email','password',)
+        fields = ('email','password')
     
-
 #***************************** Change Password Serializer ***************************#
 
 class ChangePasswordSerializer(serializers.ModelSerializer):
@@ -70,12 +74,6 @@ class ChangePasswordSerializer(serializers.ModelSerializer):
 
 class LogoutSerializer(serializers.Serializer):
     refresh = serializers.CharField()
-
-  
-    default_error_messages = {
-        'bad_token' : "{'hi':'Token Invalid or expired'}"
-    }
-
 
     def validate(self, attrs):
         self.token = attrs['refresh']

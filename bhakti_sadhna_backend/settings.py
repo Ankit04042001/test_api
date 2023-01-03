@@ -134,7 +134,8 @@ AUTH_USER_MODEL = 'bhakti_sadhna_api.User'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES' : ['rest_framework_simplejwt.authentication.JWTAuthentication',],
-    'DEFAULT_PERMISSION_CLASSES' : ['rest_framework.permissions.IsAuthenticatedOrReadOnly']
+    'DEFAULT_PERMISSION_CLASSES' : ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
+    'EXCEPTION_HANDLER': 'bhakti_sadhna_backend.utils.exceptions.custom_exception_handler'
 }
 
 

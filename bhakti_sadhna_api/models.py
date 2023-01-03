@@ -6,14 +6,12 @@ from django.utils.translation import gettext_lazy as _
 from datetime import timedelta
 
 class User(AbstractUser):
-    first_name = models.CharField(max_length = 25)
-    last_name = models.CharField(max_length = 25)
-    email = models.EmailField(blank=False, null=False, unique=True)
+    email = models.EmailField(blank=False, null=False, unique=True, error_messages={'blank':'It is working'})
     mobile_no = models.CharField(max_length=10, blank=True, null=True, default='')
     USERNAME_FIELD = 'email'
     objects = CustomUserManager()
     
-    REQUIRED_FIELDS = [first_name, last_name]
+    REQUIRED_FIELDS = ['first_name', 'last_name', 'mobile_no']
 
     def __str__(self):
         return self.email
