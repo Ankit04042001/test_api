@@ -218,10 +218,10 @@ class ForgetPasswordAPIView(generics.GenericAPIView):
                 [email],
                 fail_silently=False,
                 )
-        except exceptions as e:
+        except Exception as e:
             return Response({
                 "status" : False,
-                "msg" : e
+                "msg" : str(e)
                 })
         try:
             return Response({
