@@ -73,10 +73,10 @@ class ChangePasswordSerializer(serializers.ModelSerializer):
 
 
 class LogoutSerializer(serializers.Serializer):
-    refresh = serializers.CharField()
+    refresh_token = serializers.CharField()
 
     def validate(self, attrs):
-        self.token = attrs['refresh']
+        self.token = attrs['refresh_token']
         return attrs
 
 

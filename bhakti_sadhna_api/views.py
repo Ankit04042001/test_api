@@ -179,11 +179,11 @@ class LogoutAPIView(generics.GenericAPIView):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
-            RefreshToken(serializer.data['refresh']).blacklist()
+            RefreshToken(serializer.data['refresh_token']).blacklist()
         except TokenError as e: 
             return Response({
                 "status" : False,
-                "msg" : str(e)
+                "msg" : "Refresh token is not valid. It should be sent in body with refresh tag"
             })
         return Response({
             "status" : True,

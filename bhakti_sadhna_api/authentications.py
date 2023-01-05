@@ -119,7 +119,7 @@ class ForgetPasswordOtpAuthentication(BaseAuthentication):
         authorization_header = request.headers.get('Authorization')
 
         if not authorization_header:
-            return None
+            raise exceptions.AuthenticationFailed('Token required in Header with authorization tag.')
         try:
             # header = 'Token xxxxxxxxxxxxxxxxxxxxxxxx'
             access_token = authorization_header.split(' ')[1]
